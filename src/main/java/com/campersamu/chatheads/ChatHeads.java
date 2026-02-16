@@ -31,8 +31,8 @@ import static net.minecraft.text.TextColor.fromRgb;
 public class ChatHeads implements ModInitializer {
     public static final String MODID = "chatheads";
     public static final String PLAYER = "player";
-    private static final Identifier pixel = Identifier.of(MODID, "pixel");
-    private static final Identifier noxel = Identifier.of(MODID, "noxel");
+    public static final Identifier pixel = Identifier.of(MODID, "pixel");
+    public static final Identifier noxel = Identifier.of(MODID, "noxel");
 
     public static final Logger LOGGER = LoggerFactory.getLogger(MODID);
     public static final ChatHeadsConfig CONFIG = ChatHeadsConfig.createToml(FabricLoader.getInstance().getConfigDir(), "", ChatHeads.MODID, ChatHeadsConfig.class);
@@ -78,17 +78,17 @@ public class ChatHeads implements ModInitializer {
         }
     }
 
-    private TextColor[][] getPlayerHead(ServerPlayerEntity player) {
+    public static TextColor[][] getPlayerHead(ServerPlayerEntity player) {
         String skinId;
         try {
             skinId = player.getServer().getSessionService().getTextures(player.getGameProfile()).skin().getHash();
         } catch (Exception e) {
             return DEFAULT_HEAD_TEXTURE;
         }
-        return HEAD_CACHE.computeIfAbsent(skinId, this::getPlayerHeadImmediate);
+        return HEAD_CACHE.computeIfAbsent(skinId, ChatHeads::getPlayerHeadImmediate);
     }
 
-    private TextColor[][] getPlayerHeadImmediate(String hash) {
+    public static TextColor[][] getPlayerHeadImmediate(String hash) {
         //get skin url
         final String playerSkinUrl = CONFIG.url.value().replace("<id>", hash);
 
