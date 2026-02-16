@@ -2,9 +2,7 @@ package com.campersamu.chatheads;
 
 import eu.pb4.placeholders.api.PlaceholderResult;
 import eu.pb4.placeholders.api.Placeholders;
-import eu.pb4.polymer.autohost.impl.AutoHost;
 import eu.pb4.polymer.resourcepack.api.PolymerResourcePackUtils;
-import net.fabricmc.api.EnvType;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -65,17 +63,6 @@ public class ChatHeads implements ModInitializer {
             return playerProfile.map(gameProfile -> PlaceholderResult.value(paintHead(getPlayerHead(ctx.player()))))
                     .orElseGet(() -> PlaceholderResult.value(DEFAULT_HEAD));
         });
-
-        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER && !AutoHost.config.enabled && !FabricLoader.getInstance().isModLoaded("arte")) {
-            LOGGER.warn("""
-              #####################################
-                Polymer AutoHost is not enabled!
-              The heads in chat might appear buggy!
-               Go to config/polymer/autohost.json
-                          to enable it!
-              #####################################
-              """);
-        }
     }
 
     public static TextColor[][] getPlayerHead(ServerPlayerEntity player) {
