@@ -1,6 +1,7 @@
 package com.campersamu.chatheads.mixin;
 
 import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
@@ -17,9 +18,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.net.URL;
+import java.net.URI;
 
-import static com.campersamu.chatheads.ChatHeads.*;
+import static com.campersamu.chatheads.ChatHeads.DEFAULT_HEAD_TEXTURE;
+import static com.campersamu.chatheads.ChatHeadsInit.HEAD_CACHE;
+import static com.campersamu.chatheads.ChatHeadsInit.LOGGER;
 import static net.minecraft.text.TextColor.fromRgb;
 
 @Mixin(PlayerManager.class)
@@ -45,21 +48,23 @@ public abstract class PlayerManagerMixin {
 
     //region Util
     @Unique
-    private TextColor[][] chatheads$getPlayerHead(final GameProfile profile, final ServerPlayerEntity player){
+    private TextColor[][] chatheads$getPlayerHead(final GameProfile profile, final ServerPlayerEntity player) {
         //get skin url
         final boolean mojang = "mojang".equals(CONFIG.url.value());
         final String playerSkinUrl = mojang ? server.getSessionService().getTextures(profile).skin().getUrl() : CONFIG.url.value().replace("<uuid>", profile.getId().toString());
 
-        //return default head if null
+        final String playerSkinUrl = playerSkin.getUrl();
+
+        //return default head if skin url is null
         if (playerSkinUrl == null) return DEFAULT_HEAD_TEXTURE;
 
         //pull the picture
         final BufferedImage image;
         try {
-            image = ImageIO.read(new URL(playerSkinUrl));
+            image = ImageIO.read(URI.create(playerSkinUrl).toURL());
         } catch (Exception e) {
-            LOGGER.warn("Failed to get image for " + player.getName().getString());
-            e.printStackTrace();
+            LOGGER.warn("Failed to get image for {}", player.getName().getString());
+            LOGGER.warn(e.toString());
             return DEFAULT_HEAD_TEXTURE;
         }
 

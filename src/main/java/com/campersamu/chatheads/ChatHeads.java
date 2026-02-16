@@ -2,14 +2,17 @@ package com.campersamu.chatheads;
 
 import eu.pb4.placeholders.api.PlaceholderResult;
 import eu.pb4.placeholders.api.Placeholders;
+import eu.pb4.polymer.autohost.impl.AutoHost;
 import eu.pb4.polymer.resourcepack.api.PolymerResourcePackUtils;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +24,8 @@ import static net.minecraft.text.TextColor.fromRgb;
 
 public class ChatHeads implements ModInitializer {
     //region Constants
-    public static final String MODID = "chatheads";
+    public static final String MODID = "chatheads", PLAYER = "player";
+    public static final Logger LOGGER = LoggerFactory.getLogger(MODID);
     public static final Logger LOGGER = LoggerFactory.getLogger(MODID);
     public static final ChatHeadsConfig CONFIG = ChatHeadsConfig.createToml(FabricLoader.getInstance().getConfigDir(), ChatHeads.MODID, "config", ChatHeadsConfig.class);
     public static final TextColor[][] DEFAULT_HEAD_TEXTURE = new TextColor[][]{   //hex 0xC01044 -> TextColor.fromRgb(0xC01044)
@@ -41,22 +45,35 @@ public class ChatHeads implements ModInitializer {
     //endregion
 
     @Override
+    @SuppressWarnings("UnstableApiUsage")
     public void onInitialize() {
         //Add Mod Resources to Polymer Resource Pack
         PolymerResourcePackUtils.addModAssets(MODID);
 
         //Register Placeholder
-        Placeholders.register(new Identifier(MODID, "player"), (ctx, arg) -> {
-            if ((arg == null || arg.isEmpty()) && ctx.gameProfile() != null)
+        Placeholders.register(Identifier.of(MODID, PLAYER), (ctx, arg) -> {
+            if (ctx.gameProfile() == null || ctx.server().getUserCache() == null) return PlaceholderResult.value(DEFAULT_HEAD);
+            if (arg == null || arg.isEmpty())
                 return PlaceholderResult.value(paintHead(HEAD_CACHE.getOrDefault(ctx.gameProfile().getId(), DEFAULT_HEAD_TEXTURE)));
             final var playerProfile = ctx.server().getUserCache().findByName(arg);
             return playerProfile.map(gameProfile -> PlaceholderResult.value(paintHead(HEAD_CACHE.getOrDefault(gameProfile.getId(), DEFAULT_HEAD_TEXTURE))))
                     .orElseGet(() -> PlaceholderResult.value(DEFAULT_HEAD));
         });
+
+        if (!AutoHost.config.enabled && !FabricLoader.getInstance().isModLoaded("arte")) {
+            LOGGER.warn("""
+              #####################################
+                Polymer AutoHost is not enabled!
+              The heads in chat might appear buggy!
+               Go to config/polymer/autohost.json
+                          to enable it!
+              #####################################
+              """);
+        }
     }
 
     //region Util
-    public static Text paintHead(TextColor[][] head) {
+    public static @NotNull Text paintHead(TextColor[][] head) {
         MutableText text = Text.empty();
         for (int y = 0; y < 8; y++) {
             for (int x = 0; x < 8; x++) {

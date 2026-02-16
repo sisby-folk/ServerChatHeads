@@ -3,6 +3,7 @@
 > *Plz Mojang optimize font rendering*
 
 Use player heads in chat and more via placeholders! Credits to [CatDevz](https://github.com/CatDevz) for making the [original Minestom code](https://canary.discord.com/channels/706185253441634317/1042351571930984448/1042352421176885318).
+_⚠️ We recommend configuring [Polymer AutoHost](https://polymer.pb4.eu/latest/user/resource-pack-hosting/)._
 
 ![Showcase](https://user-images.githubusercontent.com/32773961/202585468-50f7663d-9df2-4ff1-b8ee-7beab1140783.png)
 
@@ -22,10 +23,10 @@ ___
 
 ## Credits
 - **[CatDevz](https://github.com/CatDevz)** for making the [original Minestom code](https://canary.discord.com/channels/706185253441634317/1042351571930984448/1042352421176885318)
-- **[Camper_Samu (me)](https://github.com/CamperSamu)** for making the [Fabric](fabricmc.net) port
+- **[Camper_Samu (me)](https://github.com/CamperSamu)** for making the [Fabric](https://fabricmc.net) port
 - [**TheEpicBlock** for PolyMC](https://github.com/TheEpicBlock/PolyMc)
 - **[Patbox](https://github.com/Patbox)** for [Polymer](https://github.com/Patbox/Polymer), a part of PolyMC and the core of many Serverside mods (like this one)
-- [Fabric Server-Side Development Discord](https://discord.gg/spsDnxp) for helping me while making this mod and other mods (like [WAYF?](https://github.com/CamperSamu/WhereAreYouFrom) or [PolyForgery](https://github.com/CamperSamu/PolyForgery))
+- **[Fabric Server-Side Development Discord](https://discord.gg/spsDnxp)** for helping me while making this mod and other mods (like [WAYF?](https://github.com/CamperSamu/WhereAreYouFrom) or [PolyForgery](https://github.com/CamperSamu/PolyForgery))
 
 ## Setup
 
