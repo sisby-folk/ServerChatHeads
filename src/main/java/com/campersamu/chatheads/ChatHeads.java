@@ -58,21 +58,25 @@ public class ChatHeads implements ModInitializer {
         Placeholders.register(Identifier.of(MODID, PLAYER), (ctx, arg) -> {
             if (ctx.gameProfile() == null || ctx.server().getUserCache() == null) return PlaceholderResult.value(DEFAULT_HEAD);
             if (arg == null || arg.isEmpty())
-                return PlaceholderResult.value(paintHead(getPlayerHead(ctx.player())));
+                return PlaceholderResult.value(paintHead(getPlayerHead(ctx.player(), false)));
             final var playerProfile = ctx.server().getUserCache().findByName(arg);
-            return playerProfile.map(gameProfile -> PlaceholderResult.value(paintHead(getPlayerHead(ctx.player()))))
+            return playerProfile.map(gameProfile -> PlaceholderResult.value(paintHead(getPlayerHead(ctx.player(), false))))
                     .orElseGet(() -> PlaceholderResult.value(DEFAULT_HEAD));
         });
     }
 
     public static TextColor[][] getPlayerHead(ServerPlayerEntity player) {
+        return getPlayerHead(player, true);
+    }
+
+    public static TextColor[][] getPlayerHead(ServerPlayerEntity player, boolean compute) {
         String skinId;
         try {
             skinId = player.getServer().getSessionService().getTextures(player.getGameProfile()).skin().getHash();
         } catch (Exception e) {
             return DEFAULT_HEAD_TEXTURE;
         }
-        return HEAD_CACHE.computeIfAbsent(skinId, ChatHeads::getPlayerHeadImmediate);
+        return compute ? HEAD_CACHE.computeIfAbsent(skinId, ChatHeads::getPlayerHeadImmediate) : HEAD_CACHE.getOrDefault(skinId, DEFAULT_HEAD_TEXTURE);
     }
 
     public static TextColor[][] getPlayerHeadImmediate(String hash) {
