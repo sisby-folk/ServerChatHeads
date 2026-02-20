@@ -59,9 +59,7 @@ public class ChatHeads implements ModInitializer {
             if (ctx.gameProfile() == null || ctx.server().getUserCache() == null) return PlaceholderResult.value(DEFAULT_HEAD);
             if (arg == null || arg.isEmpty())
                 return PlaceholderResult.value(paintHead(getPlayerHead(ctx.player(), false)));
-            final var playerProfile = ctx.server().getUserCache().findByName(arg);
-            return playerProfile.map(gameProfile -> PlaceholderResult.value(paintHead(getPlayerHead(ctx.player(), false))))
-                    .orElseGet(() -> PlaceholderResult.value(DEFAULT_HEAD));
+            return PlaceholderResult.value(paintHead(getPlayerHead(arg, true)));
         });
     }
 
@@ -76,6 +74,10 @@ public class ChatHeads implements ModInitializer {
         } catch (Exception e) {
             return DEFAULT_HEAD_TEXTURE;
         }
+        return getPlayerHead(skinId, compute);
+    }
+
+    public static TextColor[][] getPlayerHead(String skinId, boolean compute) {
         return compute ? HEAD_CACHE.computeIfAbsent(skinId, ChatHeads::getPlayerHeadImmediate) : HEAD_CACHE.getOrDefault(skinId, DEFAULT_HEAD_TEXTURE);
     }
 
@@ -86,11 +88,12 @@ public class ChatHeads implements ModInitializer {
         //pull the picture
         final BufferedImage image;
         try {
+            LOGGER.info("[ChatHeads] Grabbing skin from %s".formatted(playerSkinUrl), hash);
             URLConnection conn = URI.create(playerSkinUrl).toURL().openConnection();
             conn.setRequestProperty("User-Agent", "ServerChatHeads/1.0 (+https://github.com/sisby-folk/ServerChatHeads; <sleepingdragoninn@gmail.com>)");
             image = ImageIO.read(conn.getInputStream());
         } catch (Exception e) {
-            LOGGER.warn("Failed to get image for {}", hash);
+            LOGGER.warn("[ChatHeads] Failed to get image for {}", hash);
             LOGGER.warn(e.toString());
             return DEFAULT_HEAD_TEXTURE;
         }
