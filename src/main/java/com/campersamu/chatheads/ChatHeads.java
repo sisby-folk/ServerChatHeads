@@ -56,9 +56,7 @@ public class ChatHeads implements ModInitializer {
 
         //Register Placeholder
         Placeholders.register(Identifier.of(MODID, PLAYER), (ctx, arg) -> {
-            if (ctx.gameProfile() == null || ctx.server().getUserCache() == null) return PlaceholderResult.value(DEFAULT_HEAD);
-            if (arg == null || arg.isEmpty())
-                return PlaceholderResult.value(paintHead(getPlayerHead(ctx.player(), false)));
+            if (arg == null || arg.isEmpty()) return PlaceholderResult.value(paintHead(getPlayerHead(ctx.player(), false)));
             return PlaceholderResult.value(paintHead(getPlayerHead(arg, true)));
         });
     }
@@ -68,6 +66,7 @@ public class ChatHeads implements ModInitializer {
     }
 
     public static TextColor[][] getPlayerHead(ServerPlayerEntity player, boolean compute) {
+        if (player == null) return DEFAULT_HEAD_TEXTURE;
         String skinId;
         try {
             skinId = player.getServer().getSessionService().getTextures(player.getGameProfile()).skin().getHash();
