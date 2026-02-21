@@ -63,7 +63,7 @@ public class ChatHeads implements ModInitializer {
 
     public static String getSkinId(ServerPlayerEntity player) {
         if (player == null || player.getServer() == null) return null;
-        MinecraftProfileTexture skin = player.getServer().getSessionService().getTextures(player.getGameProfile()).skin();
+        MinecraftProfileTexture skin = player.getServer().getSessionService().getTextures(player.getGameProfile(), false).get(MinecraftProfileTexture.Type.SKIN);
         if (skin == null) return null;
         return skin.getHash();
     }
