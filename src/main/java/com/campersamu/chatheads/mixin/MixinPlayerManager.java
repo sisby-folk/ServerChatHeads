@@ -12,6 +12,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinPlayerManager {
     @Inject(method = "sendPlayerStatus", at = @At("TAIL"))
     private void cacheSkinOnSendStatus(ServerPlayerEntity player, CallbackInfo ci) { // happens when fabric tailor reloads a skin
-        new Thread(() -> ChatHeads.getPlayerHead(player, true)).start();
+        new Thread(() -> ChatHeads.getPlayerHead(ChatHeads.getSkinId(player), true)).start();
     }
 }
