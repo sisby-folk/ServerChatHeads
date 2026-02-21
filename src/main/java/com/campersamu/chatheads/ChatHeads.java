@@ -58,7 +58,7 @@ public class ChatHeads implements ModInitializer {
             if (skinId == null || skinId.isEmpty()) return PlaceholderResult.invalid("no skin ID!");
             if (!HEAD_CACHE.containsKey(skinId)) {
                 HEAD_CACHE.put(skinId, DEFAULT_HEAD_TEXTURE); // prevent starting multiple threads
-                new Thread(() -> getPlayerHead(skinId, true)).start();
+                new Thread(() -> HEAD_CACHE.put(skinId, getPlayerHeadImmediate(skinId))).start();
                 return PlaceholderResult.value(DEFAULT_HEAD.copy().styled(s -> s.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Loading...")))));
             }
             return PlaceholderResult.value(paintHead(getPlayerHead(skinId, false)));
