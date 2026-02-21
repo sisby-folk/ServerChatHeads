@@ -14,6 +14,6 @@ public class MixinEntity {
     @Inject(method = "readNbt", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;shouldSetPositionOnLoad()Z"))
     private void cacheSkinOnLoad(NbtCompound nbt, CallbackInfo ci) { // happens when fabric tailor loads a skin
         Entity self = (Entity) (Object) this;
-        if (self instanceof ServerPlayerEntity spe) new Thread(() -> ChatHeads.getPlayerHead(spe)).start();
+        if (self instanceof ServerPlayerEntity spe) new Thread(() -> ChatHeads.getPlayerHead(spe, true)).start();
     }
 }

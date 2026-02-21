@@ -6,6 +6,7 @@ import eu.pb4.polymer.resourcepack.api.PolymerResourcePackUtils;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.HoverEvent;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
@@ -29,13 +30,14 @@ import static net.minecraft.text.TextColor.fromRgb;
 
 public class ChatHeads implements ModInitializer {
     public static final String MODID = "chatheads";
-    public static final String PLAYER = "player";
-    public static final Identifier pixel = Identifier.of(MODID, "pixel");
-    public static final Identifier noxel = Identifier.of(MODID, "noxel");
+    public static final Identifier PLACEHOLDER = Identifier.of(MODID, "player");
+    public static final Identifier PIXEL_FONT = Identifier.of(MODID, "pixel");
+    public static final Identifier NOXEL_FONT = Identifier.of(MODID, "noxel");
 
     public static final Logger LOGGER = LoggerFactory.getLogger(MODID);
     public static final ChatHeadsConfig CONFIG = ChatHeadsConfig.createToml(FabricLoader.getInstance().getConfigDir(), "", ChatHeads.MODID, ChatHeadsConfig.class);
-    public static final TextColor[][] DEFAULT_HEAD_TEXTURE = new TextColor[][]{   //hex 0xC01044 -> TextColor.fromRgb(0xC01044)
+
+    public static final TextColor[][] DEFAULT_HEAD_TEXTURE = new TextColor[][]{ // ?
             {fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e)},
             {fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0xffffff), fromRgb(0xffffff), fromRgb(0xffffff), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e)},
             {fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0xffffff), fromRgb(0x2e2e2e), fromRgb(0xffffff), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e)},
@@ -50,32 +52,30 @@ public class ChatHeads implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        //Add Mod Resources to Polymer Resource Pack
-        PolymerResourcePackUtils.addModAssets(MODID);
-
-        //Register Placeholder
-        Placeholders.register(Identifier.of(MODID, PLAYER), (ctx, arg) -> {
-            if (arg == null || arg.isEmpty()) return PlaceholderResult.value(paintHead(getPlayerHead(ctx.player(), false)));
-            return PlaceholderResult.value(paintHead(getPlayerHead(arg, true)));
+        PolymerResourcePackUtils.addModAssets(MODID); // pixel and noxel font
+        Placeholders.register(PLACEHOLDER, (ctx, arg) -> {
+            String skinId = arg == null || arg.isEmpty() ? getSkinId(ctx.player()) : arg;
+            if (skinId == null || skinId.isEmpty()) return PlaceholderResult.invalid("no skin ID!");
+            if (!HEAD_CACHE.containsKey(skinId)) {
+                HEAD_CACHE.put(skinId, DEFAULT_HEAD_TEXTURE); // prevent starting multiple threads
+                new Thread(() -> getPlayerHead(skinId, true)).start();
+                return PlaceholderResult.value(DEFAULT_HEAD.copy().styled(s -> s.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Loading...")))));
+            }
+            return PlaceholderResult.value(paintHead(getPlayerHead(skinId, false)));
         });
     }
 
-    public static TextColor[][] getPlayerHead(ServerPlayerEntity player) {
-        return getPlayerHead(player, true);
-    }
-
-    public static TextColor[][] getPlayerHead(ServerPlayerEntity player, boolean compute) {
-        if (player == null) return DEFAULT_HEAD_TEXTURE;
-        String skinId;
+    public static String getSkinId(ServerPlayerEntity player) {
+        if (player == null) return null;
         try {
-            skinId = player.getServer().getSessionService().getTextures(player.getGameProfile()).skin().getHash();
+            return player.getServer().getSessionService().getTextures(player.getGameProfile()).skin().getHash();
         } catch (Exception e) {
-            return DEFAULT_HEAD_TEXTURE;
+            return null;
         }
-        return getPlayerHead(skinId, compute);
     }
 
     public static TextColor[][] getPlayerHead(String skinId, boolean compute) {
+        if (skinId == null) return DEFAULT_HEAD_TEXTURE;
         return compute ? HEAD_CACHE.computeIfAbsent(skinId, ChatHeads::getPlayerHeadImmediate) : HEAD_CACHE.getOrDefault(skinId, null);
     }
 
@@ -153,14 +153,14 @@ public class ChatHeads implements ModInitializer {
         MutableText text = Text.empty();
         for (int y = 0; y < 8; y++) {
             for (int x = 0; x < 8; x++) {
-                Identifier font = head[y][x] == null ? noxel : pixel;
+                Identifier font = head[y][x] == null ? NOXEL_FONT : PIXEL_FONT;
                 TextColor color = head[y][x];
 
                 text = text
                         .append(literal("" + (char) (((int) '\uF810') + y)).setStyle(Style.EMPTY.withColor(color).withFont(font)))
                         .append(literal("\uE001").fillStyle(Style.EMPTY.withFont(font)));
             }
-            text = text.append(literal("\uE008").fillStyle(Style.EMPTY.withFont(pixel)));
+            text = text.append(literal("\uE008").fillStyle(Style.EMPTY.withFont(PIXEL_FONT)));
         }
 
         text.append(literal("  "));
