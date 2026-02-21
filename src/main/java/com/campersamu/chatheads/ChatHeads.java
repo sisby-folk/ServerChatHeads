@@ -21,6 +21,7 @@ import java.awt.image.BufferedImage;
 import java.net.URI;
 import java.net.URLConnection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static net.minecraft.text.Text.literal;
@@ -35,16 +36,14 @@ public class ChatHeads implements ModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger(MODID);
     public static final ChatHeadsConfig CONFIG = ChatHeadsConfig.createToml(FabricLoader.getInstance().getConfigDir(), "", ChatHeads.MODID, ChatHeadsConfig.class);
     public static final TextColor[][] DEFAULT_HEAD_TEXTURE = new TextColor[][]{   //hex 0xC01044 -> TextColor.fromRgb(0xC01044)
-            {fromRgb(0x191919), fromRgb(0x0c0c0c), fromRgb(0x0c0c0c), fromRgb(0x0c0c0c), fromRgb(0x0c0c0c), fromRgb(0x0c0c0c), fromRgb(0x0c0c0c), fromRgb(0x191919)},
-            {fromRgb(0x191919), fromRgb(0x0c0c0c), fromRgb(0x0c0c0c), fromRgb(0x0c0c0c), fromRgb(0x0c0c0c), fromRgb(0x0c0c0c), fromRgb(0x0c0c0c), fromRgb(0x191919)},
-            {fromRgb(0x191919), fromRgb(0x191919), fromRgb(0x0c0c0c), fromRgb(0x0c0c0c), fromRgb(0x0c0c0c), fromRgb(0x0c0c0c), fromRgb(0x191919), fromRgb(0x191919)},
-            {fromRgb(0x191919), fromRgb(0x191919), fromRgb(0x191919), fromRgb(0x191919), fromRgb(0x191919), fromRgb(0xffd7b0), fromRgb(0xffd7b0), fromRgb(0x191919)},
-
-            {fromRgb(0xffd7b0), fromRgb(0xffd7b0), fromRgb(0xffd7b0), fromRgb(0xffd7b0), fromRgb(0xffd7b0), fromRgb(0xffd7b0), fromRgb(0xffd7b0), fromRgb(0xffd7b0)},
-            {fromRgb(0xffd7b0), fromRgb(0xffd7b0), fromRgb(0xffd7b0), fromRgb(0xffd7b0), fromRgb(0xffd7b0), fromRgb(0xffd7b0), fromRgb(0xffd7b0), fromRgb(0xffd7b0)},
-
-            {fromRgb(0xffd7b0), fromRgb(0xffd7b0), fromRgb(0xffd7b0), fromRgb(0xffd7b0), fromRgb(0xffd7b0), fromRgb(0xffd7b0), fromRgb(0xffd7b0), fromRgb(0xffd7b0)},
-            {fromRgb(0xffd7b0), fromRgb(0xffd7b0), fromRgb(0xffd7b0), fromRgb(0xffd7b0), fromRgb(0xffd7b0), fromRgb(0xffd7b0), fromRgb(0xffd7b0), fromRgb(0xffd7b0)},
+            {fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e)},
+            {fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0xffffff), fromRgb(0xffffff), fromRgb(0xffffff), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e)},
+            {fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0xffffff), fromRgb(0x2e2e2e), fromRgb(0xffffff), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e)},
+            {fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0xffffff), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e)},
+            {fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0xffffff), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e)},
+            {fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e)},
+            {fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0xffffff), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e)},
+            {fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e)},
     };
     public static final Text DEFAULT_HEAD = paintHead(DEFAULT_HEAD_TEXTURE);
     public static final Map<String, TextColor[][]> HEAD_CACHE = new ConcurrentHashMap<>();
@@ -77,7 +76,7 @@ public class ChatHeads implements ModInitializer {
     }
 
     public static TextColor[][] getPlayerHead(String skinId, boolean compute) {
-        return compute ? HEAD_CACHE.computeIfAbsent(skinId, ChatHeads::getPlayerHeadImmediate) : HEAD_CACHE.getOrDefault(skinId, DEFAULT_HEAD_TEXTURE);
+        return compute ? HEAD_CACHE.computeIfAbsent(skinId, ChatHeads::getPlayerHeadImmediate) : HEAD_CACHE.getOrDefault(skinId, null);
     }
 
     public static TextColor[][] getPlayerHeadImmediate(String hash) {
@@ -150,6 +149,7 @@ public class ChatHeads implements ModInitializer {
     }
 
     public static @NotNull Text paintHead(TextColor[][] head) {
+        if (head == null) return Objects.requireNonNull(DEFAULT_HEAD);
         MutableText text = Text.empty();
         for (int y = 0; y < 8; y++) {
             for (int x = 0; x < 8; x++) {
