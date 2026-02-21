@@ -1,5 +1,6 @@
 package com.campersamu.chatheads;
 
+import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import eu.pb4.placeholders.api.PlaceholderResult;
 import eu.pb4.placeholders.api.Placeholders;
 import eu.pb4.polymer.resourcepack.api.PolymerResourcePackUtils;
@@ -11,6 +12,7 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import org.jetbrains.annotations.NotNull;
@@ -37,7 +39,7 @@ public class ChatHeads implements ModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger(MODID);
     public static final ChatHeadsConfig CONFIG = ChatHeadsConfig.createToml(FabricLoader.getInstance().getConfigDir(), "", ChatHeads.MODID, ChatHeadsConfig.class);
 
-    public static final TextColor[][] DEFAULT_HEAD_TEXTURE = new TextColor[][]{ // ?
+    public static final Text DEFAULT = paintHead(new TextColor[][]{ // white on grey [?] placeholder
             {fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e)},
             {fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0xffffff), fromRgb(0xffffff), fromRgb(0xffffff), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e)},
             {fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0xffffff), fromRgb(0x2e2e2e), fromRgb(0xffffff), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e)},
@@ -46,58 +48,48 @@ public class ChatHeads implements ModInitializer {
             {fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e)},
             {fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0xffffff), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e)},
             {fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e)},
-    };
-    public static final Text DEFAULT_HEAD = paintHead(DEFAULT_HEAD_TEXTURE);
-    public static final Map<String, TextColor[][]> HEAD_CACHE = new ConcurrentHashMap<>();
+    });
+    public static final Map<String, Text> CACHE = new ConcurrentHashMap<>();
 
     @Override
     public void onInitialize() {
         PolymerResourcePackUtils.addModAssets(MODID); // pixel and noxel font
         Placeholders.register(PLACEHOLDER, (ctx, arg) -> {
             String skinId = arg == null || arg.isEmpty() ? getSkinId(ctx.player()) : arg;
-            if (skinId == null || skinId.isEmpty()) return PlaceholderResult.invalid("no skin ID!");
-            if (!HEAD_CACHE.containsKey(skinId)) {
-                HEAD_CACHE.put(skinId, DEFAULT_HEAD_TEXTURE); // prevent starting multiple threads
-                new Thread(() -> HEAD_CACHE.put(skinId, getPlayerHeadImmediate(skinId))).start();
-                return PlaceholderResult.value(DEFAULT_HEAD.copy().styled(s -> s.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Loading...")))));
-            }
-            return PlaceholderResult.value(paintHead(getPlayerHead(skinId, false)));
+            if (skinId == null || skinId.isEmpty()) return PlaceholderResult.invalid("Missing skin ID!");
+            return PlaceholderResult.value(tryGetPlayerHead(skinId));
         });
     }
 
     public static String getSkinId(ServerPlayerEntity player) {
-        if (player == null) return null;
-        try {
-            return player.getServer().getSessionService().getTextures(player.getGameProfile()).skin().getHash();
-        } catch (Exception e) {
-            return null;
+        if (player == null || player.getServer() == null) return null;
+        MinecraftProfileTexture skin = player.getServer().getSessionService().getTextures(player.getGameProfile()).skin();
+        if (skin == null) return null;
+        return skin.getHash();
+    }
+
+    public static Text tryGetPlayerHead(String skinId) {
+        if (!CACHE.containsKey(skinId)) { // not already available, so return a placeholder and put the oven on.
+            CACHE.put(skinId, DEFAULT.copy().styled(s -> s.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Loading...")))));
+            new Thread(() -> CACHE.put(skinId, getPlayerHeadImmediate(skinId))).start();
         }
+        return CACHE.get(skinId);
     }
 
-    public static TextColor[][] getPlayerHead(String skinId, boolean compute) {
-        if (skinId == null) return DEFAULT_HEAD_TEXTURE;
-        return compute ? HEAD_CACHE.computeIfAbsent(skinId, ChatHeads::getPlayerHeadImmediate) : HEAD_CACHE.getOrDefault(skinId, null);
-    }
-
-    public static TextColor[][] getPlayerHeadImmediate(String hash) {
-        //get skin url
-        final String playerSkinUrl = CONFIG.url.value().replace("<id>", hash);
-
-        //pull the picture
-        final BufferedImage image;
+    private static Text getPlayerHeadImmediate(String hash) {
+        String playerSkinUrl = CONFIG.url.value().replace("<id>", hash);
+        BufferedImage image;
         try {
             LOGGER.info("[ChatHeads] Grabbing skin from %s".formatted(playerSkinUrl), hash);
             URLConnection conn = URI.create(playerSkinUrl).toURL().openConnection();
             conn.setRequestProperty("User-Agent", "ServerChatHeads/1.0 (+https://github.com/sisby-folk/ServerChatHeads; <sleepingdragoninn@gmail.com>)");
             image = ImageIO.read(conn.getInputStream());
         } catch (Exception e) {
-            LOGGER.warn("[ChatHeads] Failed to get image for {}", hash);
-            LOGGER.warn(e.toString());
-            return DEFAULT_HEAD_TEXTURE;
+            LOGGER.warn("[ChatHeads] Failed to get image for {}", hash, e);
+            return DEFAULT.copy().styled(s -> s.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal("Couldn't fetch skin!").formatted(Formatting.RED))));
         }
 
-        //generate the head
-        final TextColor[][] playerHead = new TextColor[8][8];
+        TextColor[][] playerHead = new TextColor[8][8];
 
         boolean fullSkin = image.getWidth() == 64;
 
@@ -119,7 +111,6 @@ public class ChatHeads implements ModInitializer {
                 }
             }
         } else {
-            // look man we gotta do SOMETHING
             // calculate the non-transparent square bounds
             int startXY = Integer.MAX_VALUE;
             int endXY = Integer.MIN_VALUE;
@@ -145,11 +136,11 @@ public class ChatHeads implements ModInitializer {
             }
         }
 
-        return playerHead;
+        return paintHead(playerHead);
     }
 
-    public static @NotNull Text paintHead(TextColor[][] head) {
-        if (head == null) return Objects.requireNonNull(DEFAULT_HEAD);
+    private static @NotNull Text paintHead(TextColor[][] head) {
+        if (head == null) return Objects.requireNonNull(DEFAULT);
         MutableText text = Text.empty();
         for (int y = 0; y < 8; y++) {
             for (int x = 0; x < 8; x++) {
