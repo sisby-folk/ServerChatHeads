@@ -69,6 +69,7 @@ public class ChatHeads implements ModInitializer {
     }
 
     public static Text tryGetPlayerHead(String skinId) {
+        if (skinId == null) return DEFAULT;
         if (!CACHE.containsKey(skinId)) { // not already available, so return a placeholder and put the oven on.
             CACHE.put(skinId, DEFAULT.copy().styled(s -> s.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Loading...")))));
             new Thread(() -> CACHE.put(skinId, getPlayerHeadImmediate(skinId))).start();
