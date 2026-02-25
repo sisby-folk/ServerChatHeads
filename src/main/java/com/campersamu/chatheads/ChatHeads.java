@@ -14,6 +14,7 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.ColorHelper;
 import net.minecraft.util.math.MathHelper;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -91,7 +92,7 @@ public class ChatHeads implements ModInitializer {
             return DEFAULT.copy().styled(s -> s.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal("Couldn't fetch skin!").formatted(Formatting.RED))));
         }
 
-        TextColor[][] playerHead = new TextColor[8][8];
+        int[][] headArgb = new int[8][8];
 
         boolean fullSkin = image.getWidth() == 64;
 
@@ -101,7 +102,7 @@ public class ChatHeads implements ModInitializer {
             for (int x = 0; x < 8; x++) {
                 for (int y = 0; y < 8; y++) {
                     int rgb = image.getRGB(faceX + x, faceY + y);
-                    if (rgb != 0) playerHead[y][x] = fromRgb(rgb & 0xffffff);
+                    headArgb[y][x] = rgb;
                 }
             }
             int hatX = 40;
@@ -109,7 +110,7 @@ public class ChatHeads implements ModInitializer {
             for (int x = 0; x < 8; x++) {
                 for (int y = 0; y < 8; y++) {
                     int rgb = image.getRGB(hatX + x, hatY + y);
-                    if (rgb != 0) playerHead[y][x] = fromRgb(rgb & 0xffffff);
+                    if (rgb != 0) headArgb[y][x] = overlay(headArgb[y][x], rgb);
                 }
             }
         } else {
@@ -131,14 +132,36 @@ public class ChatHeads implements ModInitializer {
                     for (int y = 0; y < 8; y++) {
                         int sourceX = MathHelper.clamp(startXY + Math.round((x + 0.49F) * step), startXY, endXY);
                         int sourceY = MathHelper.clamp(startXY + Math.round((y + 0.49F) * step), startXY, endXY);
-                        int rgb = image.getRGB(sourceX, sourceY);
-                        if (rgb != 0) playerHead[y][x] = fromRgb(rgb & 0xffffff);
+                        headArgb[y][x] = image.getRGB(sourceX, sourceY);
                     }
                 }
             }
         }
 
+        TextColor[][] playerHead = new TextColor[8][8];
+        for (int x = 0; x < 8; x++) {
+            for (int y = 0; y < 8; y++) {
+                if (headArgb[x][y] != 0) playerHead[x][y] = fromRgb(headArgb[x][y] & 0xffffff);
+            }
+        }
+
         return paintHead(playerHead);
+    }
+
+    private static int overlay(int baseARGB, int overlayARGB) {
+        float a1 = ColorHelper.Argb.getAlpha(overlayARGB) / 255.0F;
+        float r1 = ColorHelper.Argb.getRed(overlayARGB) / 255.0F;
+        float g1 = ColorHelper.Argb.getGreen(overlayARGB) / 255.0F;
+        float b1 = ColorHelper.Argb.getBlue(overlayARGB) / 255.0F;
+        float a2 = ColorHelper.Argb.getAlpha(baseARGB) / 255.0F;
+        float r2 = ColorHelper.Argb.getRed(baseARGB) / 255.0F;
+        float g2 = ColorHelper.Argb.getGreen(baseARGB) / 255.0F;
+        float b2 = ColorHelper.Argb.getBlue(baseARGB) / 255.0F;
+        float aF = a1 + (a2*(1-a1));
+        float rF = (r1*a1) + (r2*a2*(1-a1));
+        float gF = (g1*a1) + (g2*a2*(1-a1));
+        float bF = (b1*a1) + (b2*a2*(1-a1));
+        return ColorHelper.Argb.getArgb((int)(255 * aF), (int)(255 * rF), (int)(255 * gF), (int)(255 * bF));
     }
 
     private static @NotNull Text paintHead(TextColor[][] head) {
