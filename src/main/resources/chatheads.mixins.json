@@ -5,9 +5,11 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "MixinEntity",
+    "MixinMinecraftServer",
     "MixinPlayerManager"
   ],
   "client": [
+    "client.MixinChatHud"
   ],
   "injectors": {
     "defaultRequire": 1

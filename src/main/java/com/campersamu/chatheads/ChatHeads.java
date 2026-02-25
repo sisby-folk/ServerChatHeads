@@ -49,6 +49,7 @@ public class ChatHeads implements ModInitializer {
             {fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0xffffff), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e)},
             {fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e), fromRgb(0x2e2e2e)},
     });
+    public static final String STRING = DEFAULT.getString();
     public static final Map<String, Text> CACHE = new ConcurrentHashMap<>();
 
     @Override
