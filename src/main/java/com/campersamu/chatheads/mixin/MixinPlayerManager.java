@@ -3,7 +3,6 @@ package com.campersamu.chatheads.mixin;
 import com.campersamu.chatheads.ChatHeads;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ConnectedClientData;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,7 +17,7 @@ public class MixinPlayerManager {
     }
 
     @Inject(method = "onPlayerConnect", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayerEntity;onSpawn()V"))
-    private void cacheOnSpawn(ClientConnection connection, ServerPlayerEntity player, ConnectedClientData clientData, CallbackInfo ci) { // for new players
+    private void cacheOnSpawn(ClientConnection connection, ServerPlayerEntity player, CallbackInfo ci) { // for new players
         ChatHeads.tryGetPlayerHead(ChatHeads.getSkinId(player));
     }
 }
